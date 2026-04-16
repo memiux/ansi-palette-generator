@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en" data-mode="dark">
+<head>
+	<meta charset="UTF-8">
+	<title>ANSI Colors — OKLCH Pastels</title>
+	<style>
+		:root { --bg: #1a1a1a; --fg: #cccccc; --label: #888; --border: #333; }
+		[data-mode="light"] { --bg: #f5f5f5; --fg: #222222; --label: #666; --border: #ccc; }
+		body { font-family: monospace; background: var(--bg); color: var(--fg); padding: 2rem; transition: background .2s, color .2s; }
+		.toolbar { display: flex; justify-content: flex-end; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+		.grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: .5rem; }
+		.swatch {
+			position: relative; padding: 1rem .5rem .4rem;
+			text-align: center; font-size: .75rem; border-radius: 4px; cursor: default;
+			display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: .3rem;
+		}
+		.badge { font-size: .6rem; opacity: .75; line-height: 1; display: flex; align-items: center; gap: .2rem; }
+		.dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+		.dot.aaa  { background: #2ecc71; }
+		.dot.aa   { background: #f1c40f; }
+		.dot.a    { background: #e67e22; }
+		.dot.fail { background: #e74c3c; }
+		h2 { margin: 0 0 .5rem; font-size: .85rem; color: var(--label); }
+		pre { margin-top: 2rem; line-height: 1.6; color: var(--label); }
+		.controls-wrap { display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: flex-start; }
+		.controls { display: flex; flex-direction: column; gap: .75rem; padding: 1rem; border: 1px solid var(--border); border-radius: 6px; }
+		.controls header { display: flex; align-items: center; margin-bottom: .25rem; }
+		.controls header span { font-size: .85rem; color: var(--label); }
+		.group-block { display: flex; flex-direction: column; gap: .35rem; }
+		.group-label { font-size: .7rem; color: var(--label); text-transform: uppercase; letter-spacing: .05em; }
+		.slider-row { display: grid; grid-template-columns: 4.5rem 1fr 3rem; align-items: center; gap: .5rem; font-size: .75rem; color: var(--label); }
+		.slider-row input[type=range] { width: 100%; accent-color: var(--fg); }
+		.slider-row output { text-align: right; color: var(--label); transition: color .15s; }
+		.slider-row output.changed { color: var(--fg); font-weight: bold; }
+		hr.divider { border: none; border-top: 1px solid var(--border); margin: .25rem 0; }
+		button, select {
+			padding: .4rem .75rem; font-family: monospace; font-size: .85rem;
+			background: transparent; color: var(--fg); border: 1px solid var(--label);
+			border-radius: 4px; cursor: pointer;
+		}
+		button:hover, select:hover { border-color: var(--fg); }
+		select option { background: var(--bg); color: var(--fg); }
+	</style>
+</head>
+<body>
+
+	<div class="toolbar">
+		<select id="preset-select">
+			<option value="default">Default</option>
+			<option value="warm">Warm</option>
+			<option value="cool">Cool</option>
+			<option value="nord">Nord-ish</option>
+			<option value="muted">Muted</option>
+			<option value="vivid">Vivid</option>
+		</select>
+		<button id="btn-reset">Reset</button>
+		<button id="btn-toggle">☀ Light</button>
+	</div>
+
+	<div class="controls-wrap">
+
+		<div class="controls">
+			<header><span>Hue (H)</span></header>
+			<div class="slider-row">
+				<label>Red</label>
+				<input type="range" data-hue="Red" min="10" max="60" step="1" value="29">
+				<output>29</output>
+			</div>
+			<div class="slider-row">
+				<label>Yellow</label>
+				<input type="range" data-hue="Yellow" min="75" max="130" step="1" value="109">
+				<output>109</output>
+			</div>
+			<div class="slider-row">
+				<label>Green</label>
+				<input type="range" data-hue="Green" min="120" max="175" step="1" value="142">
+				<output>142</output>
+			</div>
+			<div class="slider-row">
+				<label>Cyan</label>
+				<input type="range" data-hue="Cyan" min="175" max="220" step="1" value="194">
+				<output>194</output>
+			</div>
+			<div class="slider-row">
+				<label>Blue</label>
+				<input type="range" data-hue="Blue" min="220" max="295" step="1" value="264">
+				<output>264</output>
+			</div>
+			<div class="slider-row">
+				<label>Magenta</label>
+				<input type="range" data-hue="Magenta" min="295" max="360" step="1" value="328">
+				<output>328</output>
+			</div>
+			<hr class="divider">
+			<div class="slider-row">
+				<label>Temp</label>
+				<input type="range" id="temp-slider" min="-20" max="20" step="1" value="0">
+				<output id="temp-output">0</output>
+			</div>
+		</div>
+
+		<div class="controls">
+			<header><span>oklch( L  C  H )</span></header>
+			<div class="group-block">
+				<span class="group-label">Dim</span>
+				<div class="slider-row">
+					<label>L</label>
+					<input type="range" data-group="Dim" data-param="l" min="0.10" max="0.95" step="0.01" value="0.55">
+					<output>0.55</output>
+				</div>
+				<div class="slider-row">
+					<label>C</label>
+					<input type="range" data-group="Dim" data-param="c" min="0.00" max="0.30" step="0.01" value="0.07">
+					<output>0.07</output>
+				</div>
+			</div>
+			<hr class="divider">
+			<div class="group-block">
+				<span class="group-label">Normal</span>
+				<div class="slider-row">
+					<label>L</label>
+					<input type="range" data-group="Normal" data-param="l" min="0.10" max="0.95" step="0.01" value="0.72">
+					<output>0.72</output>
+				</div>
+				<div class="slider-row">
+					<label>C</label>
+					<input type="range" data-group="Normal" data-param="c" min="0.00" max="0.30" step="0.01" value="0.10">
+					<output>0.10</output>
+				</div>
+			</div>
+			<hr class="divider">
+			<div class="group-block">
+				<span class="group-label">Bright</span>
+				<div class="slider-row">
+					<label>L</label>
+					<input type="range" data-group="Bright" data-param="l" min="0.10" max="0.95" step="0.01" value="0.82">
+					<output>0.82</output>
+				</div>
+				<div class="slider-row">
+					<label>C</label>
+					<input type="range" data-group="Bright" data-param="c" min="0.00" max="0.30" step="0.01" value="0.13">
+					<output>0.13</output>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+	<h2>Dim</h2>
+	<div class="grid" data-group="Dim">
+		<div class="swatch" data-color="Black" data-neutral="1">Black<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Red">Red<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Yellow">Yellow<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Green">Green<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Cyan">Cyan<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Blue">Blue<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Magenta">Magenta<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="White" data-neutral="1">White<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+	</div>
+
+	<h2 style="margin-top:1.5rem">Normal</h2>
+	<div class="grid" data-group="Normal">
+		<div class="swatch" data-color="Black" data-neutral="1">Black<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Red">Red<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Yellow">Yellow<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Green">Green<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Cyan">Cyan<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Blue">Blue<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Magenta">Magenta<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="White" data-neutral="1">White<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+	</div>
+
+	<h2 style="margin-top:1.5rem">Bright</h2>
+	<div class="grid" data-group="Bright">
+		<div class="swatch" data-color="Black" data-neutral="1">Black<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Red">Red<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Yellow">Yellow<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Green">Green<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Cyan">Cyan<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Blue">Blue<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="Magenta">Magenta<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		<div class="swatch" data-color="White" data-neutral="1">White<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+	</div>
+	<pre id="palette"></pre>
+
+	<script>
+		const RAINBOW = ['Red', 'Yellow', 'Green', 'Cyan', 'Blue', 'Magenta', 'Black', 'White'];
+
+		const DEFAULTS = {
+			hues:   { Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328 },
+			temp:   0,
+			params: {
+				Dim:    { l: 0.55, c: 0.07 },
+				Normal: { l: 0.72, c: 0.10 },
+				Bright: { l: 0.82, c: 0.13 },
+			},
+		};
+
+		const PRESETS = {
+			default: {
+				hues:   { Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328 },
+				temp:   0,
+				params: { Dim: { l: 0.55, c: 0.07 }, Normal: { l: 0.72, c: 0.10 }, Bright: { l: 0.82, c: 0.13 } },
+			},
+			warm: {
+				hues:   { Red: 22, Yellow: 95, Green: 140, Cyan: 188, Blue: 258, Magenta: 320 },
+				temp:   -8,
+				params: { Dim: { l: 0.53, c: 0.08 }, Normal: { l: 0.70, c: 0.11 }, Bright: { l: 0.80, c: 0.14 } },
+			},
+			cool: {
+				hues:   { Red: 35, Yellow: 115, Green: 148, Cyan: 200, Blue: 270, Magenta: 335 },
+				temp:   8,
+				params: { Dim: { l: 0.56, c: 0.07 }, Normal: { l: 0.73, c: 0.10 }, Bright: { l: 0.83, c: 0.12 } },
+			},
+			nord: {
+				hues:   { Red: 15, Yellow: 92, Green: 143, Cyan: 196, Blue: 248, Magenta: 316 },
+				temp:   3,
+				params: { Dim: { l: 0.50, c: 0.06 }, Normal: { l: 0.68, c: 0.08 }, Bright: { l: 0.78, c: 0.10 } },
+			},
+			muted: {
+				hues:   { Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328 },
+				temp:   0,
+				params: { Dim: { l: 0.55, c: 0.04 }, Normal: { l: 0.72, c: 0.06 }, Bright: { l: 0.82, c: 0.08 } },
+			},
+			vivid: {
+				hues:   { Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328 },
+				temp:   0,
+				params: { Dim: { l: 0.52, c: 0.12 }, Normal: { l: 0.70, c: 0.16 }, Bright: { l: 0.80, c: 0.20 } },
+			},
+		};
+
+		const hues   = { ...DEFAULTS.hues };
+		const params = {
+			Dim:    { ...DEFAULTS.params.Dim },
+			Normal: { ...DEFAULTS.params.Normal },
+			Bright: { ...DEFAULTS.params.Bright },
+		};
+		let temperature = 0;
+
+		const neutralFactor = { Black: 0.42, White: 1.05 };
+
+		const canvas = document.createElement('canvas');
+		canvas.width = canvas.height = 1;
+		const ctx = canvas.getContext('2d');
+
+		function toRGB(cssColor) {
+			ctx.clearRect(0, 0, 1, 1);
+			ctx.fillStyle = cssColor;
+			ctx.fillRect(0, 0, 1, 1);
+			const d = ctx.getImageData(0, 0, 1, 1).data;
+			return [d[0], d[1], d[2]];
+		}
+
+		function toHex([r, g, b]) {
+			return '#' + [r, g, b].map(n => n.toString(16).padStart(2, '0').toUpperCase()).join('');
+		}
+
+		function linearize(c) {
+			c /= 255;
+			return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+		}
+
+		function luminance(r, g, b) {
+			return 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b);
+		}
+
+		function contrastRatio(lum1, lum2) {
+			const light = Math.max(lum1, lum2);
+			const dark  = Math.min(lum1, lum2);
+			return (light + 0.05) / (dark + 0.05);
+		}
+
+		function wcagLevel(ratio) {
+			if (ratio >= 7)   return 'aaa';
+			if (ratio >= 4.5) return 'aa';
+			if (ratio >= 3)   return 'a';
+			return 'fail';
+		}
+
+		function applySwatches() {
+			const isDark   = document.documentElement.dataset.mode === 'dark';
+			const neutralC = Math.abs(temperature) * 0.003;
+			const neutralH = temperature < 0 ? 60 : 260;
+
+			document.querySelectorAll('.grid[data-group]').forEach(grid => {
+				const group = grid.dataset.group;
+				const { l, c } = params[group];
+
+				grid.querySelectorAll('.swatch').forEach(el => {
+					const name     = el.dataset.color;
+					const neutral  = el.dataset.neutral;
+					const neutralL = Math.min(0.98, Math.max(0.05, l * (neutralFactor[name] ?? 1)));
+					const bgCss = neutral
+						? `oklch(${neutralL.toFixed(2)} ${neutralC.toFixed(4)} ${neutralH})`
+						: `oklch(${l} ${c} ${hues[name] + temperature})`;
+
+					el.style.background = bgCss;
+
+					const textColor = isDark
+						? (name === 'Black' ? '#ccc' : '#333')
+						: (name === 'White' ? '#333' : '#fff');
+					el.style.color = textColor;
+
+					const bgRGB  = toRGB(bgCss);
+					const txtRGB = toRGB(textColor);
+					const ratio  = contrastRatio(luminance(...bgRGB), luminance(...txtRGB));
+					const level  = wcagLevel(ratio);
+					el.querySelector('.dot').className    = `dot ${level}`;
+					el.querySelector('.ratio').textContent = ratio.toFixed(1);
+					el.title = toHex(bgRGB);
+				});
+			});
+
+			renderPalette();
+		}
+
+		function renderPalette() {
+			const mode  = document.documentElement.dataset.mode;
+			const lines = [mode.charAt(0).toUpperCase() + mode.slice(1), ''];
+			document.querySelectorAll('.grid[data-group]').forEach(grid => {
+				const group = grid.dataset.group;
+				const map   = Object.fromEntries(
+					[...grid.querySelectorAll('.swatch')].map(el => [el.dataset.color, el])
+				);
+				lines.push(group);
+				RAINBOW.forEach(name => lines.push(`  ${name.padEnd(8)}${map[name].title}`));
+				lines.push('');
+			});
+			document.getElementById('palette').textContent = lines.join('\n').trimEnd();
+		}
+
+		function markOutput(outputEl, currentStr, defaultStr) {
+			outputEl.classList.toggle('changed', currentStr !== defaultStr);
+		}
+
+		function syncSlidersToState(preset) {
+			document.querySelectorAll('input[data-hue]').forEach(slider => {
+				const color  = slider.dataset.hue;
+				const value  = preset.hues[color];
+				const output = slider.nextElementSibling;
+				slider.value = value;
+				output.value = String(value);
+				markOutput(output, String(value), String(DEFAULTS.hues[color]));
+			});
+
+			const tempSlider = document.getElementById('temp-slider');
+			const tempOutput = document.getElementById('temp-output');
+			tempSlider.value = preset.temp;
+			tempOutput.value = preset.temp > 0 ? `+${preset.temp}` : String(preset.temp);
+			markOutput(tempOutput, String(preset.temp), String(DEFAULTS.temp));
+
+			document.querySelectorAll('input[data-group]').forEach(slider => {
+				const g      = slider.dataset.group;
+				const p      = slider.dataset.param;
+				const value  = preset.params[g][p];
+				const output = slider.nextElementSibling;
+				slider.value = value;
+				output.value = value.toFixed(2);
+				markOutput(output, value.toFixed(2), DEFAULTS.params[g][p].toFixed(2));
+			});
+		}
+
+		function applyPreset(preset) {
+			Object.assign(hues, preset.hues);
+			Object.keys(params).forEach(g => Object.assign(params[g], preset.params[g]));
+			temperature = preset.temp;
+			syncSlidersToState(preset);
+			applySwatches();
+		}
+
+		document.getElementById('temp-slider').addEventListener('input', function() {
+			temperature = parseInt(this.value, 10);
+			const output = document.getElementById('temp-output');
+			output.value = temperature > 0 ? `+${temperature}` : String(temperature);
+			markOutput(output, String(temperature), String(DEFAULTS.temp));
+			document.getElementById('preset-select').value = '';
+			applySwatches();
+		});
+
+		document.querySelectorAll('input[data-hue]').forEach(slider => {
+			slider.addEventListener('input', () => {
+				const value  = parseInt(slider.value, 10);
+				const output = slider.nextElementSibling;
+				hues[slider.dataset.hue] = value;
+				output.value = String(value);
+				markOutput(output, String(value), String(DEFAULTS.hues[slider.dataset.hue]));
+				document.getElementById('preset-select').value = '';
+				applySwatches();
+			});
+		});
+
+		document.querySelectorAll('input[data-group]').forEach(slider => {
+			slider.addEventListener('input', () => {
+				const value  = parseFloat(slider.value);
+				const output = slider.nextElementSibling;
+				params[slider.dataset.group][slider.dataset.param] = value;
+				output.value = value.toFixed(2);
+				markOutput(output, value.toFixed(2), DEFAULTS.params[slider.dataset.group][slider.dataset.param].toFixed(2));
+				document.getElementById('preset-select').value = '';
+				applySwatches();
+			});
+		});
+
+		document.getElementById('preset-select').addEventListener('change', function() {
+			if (this.value && PRESETS[this.value]) applyPreset(PRESETS[this.value]);
+		});
+
+		document.getElementById('btn-reset').addEventListener('click', () => {
+			document.getElementById('preset-select').value = 'default';
+			applyPreset(PRESETS.default);
+		});
+
+		document.getElementById('btn-toggle').addEventListener('click', () => {
+			const html = document.documentElement;
+			const next = html.dataset.mode === 'dark' ? 'light' : 'dark';
+			html.dataset.mode = next;
+			document.getElementById('btn-toggle').textContent = next === 'dark' ? '\u2600 Light' : '\u263E Dark';
+			applySwatches();
+		});
+
+		applySwatches();
+	</script>
+</body>
+</html>
