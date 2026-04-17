@@ -21,8 +21,8 @@
 		.dot.a    { background: #e67e22; }
 		.dot.fail { background: #e74c3c; }
 		h2 { margin: 0 0 .5rem; font-size: .85rem; color: var(--label); }
-		pre { margin-top: 2rem; line-height: 1.6; color: var(--label); }
-		.controls-wrap { display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: flex-start; }
+		.swatches-card { border: 1px solid var(--border); border-radius: 6px; padding: 1rem; margin-bottom: 1rem; }
+		.controls-wrap { display: flex; gap: 1rem; flex-wrap: wrap; }
 		.controls { display: flex; flex-direction: column; gap: .75rem; padding: 1rem; border: 1px solid var(--border); border-radius: 6px; }
 		.controls header { display: flex; align-items: center; margin-bottom: .25rem; }
 		.controls header span { font-size: .85rem; color: var(--label); }
@@ -40,6 +40,18 @@
 		}
 		button:hover, select:hover { border-color: var(--fg); }
 		select option { background: var(--bg); color: var(--fg); }
+		.palette-card { display: flex; flex-direction: column; }
+		.palette-card pre { margin: 0; line-height: 1.6; color: var(--label); overflow-y: auto; flex: 1; }
+		@media (max-width: 700px) {
+			body { padding: 1rem; }
+			.controls-wrap { flex-direction: column; }
+			.controls { width: 100%; box-sizing: border-box; }
+			.palette-card pre { max-height: 16rem; }
+			.grid { grid-template-columns: repeat(4, 1fr); }
+		}
+		@media (max-width: 420px) {
+			.grid { grid-template-columns: repeat(2, 1fr); }
+		}
 	</style>
 </head>
 <body>
@@ -56,6 +68,44 @@
 		</select>
 		<button id="btn-reset">Reset</button>
 		<button id="btn-toggle">☀ Light</button>
+	</div>
+
+	<div class="swatches-card">
+		<h2>Dim</h2>
+		<div class="grid" data-group="Dim">
+			<div class="swatch" data-color="Black" data-neutral="1">Black<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Red">Red<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Yellow">Yellow<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Green">Green<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Cyan">Cyan<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Blue">Blue<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Magenta">Magenta<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="White" data-neutral="1">White<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		</div>
+
+		<h2 style="margin-top:1.5rem">Normal</h2>
+		<div class="grid" data-group="Normal">
+			<div class="swatch" data-color="Black" data-neutral="1">Black<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Red">Red<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Yellow">Yellow<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Green">Green<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Cyan">Cyan<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Blue">Blue<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Magenta">Magenta<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="White" data-neutral="1">White<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		</div>
+
+		<h2 style="margin-top:1.5rem">Bright</h2>
+		<div class="grid" data-group="Bright">
+			<div class="swatch" data-color="Black" data-neutral="1">Black<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Red">Red<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Yellow">Yellow<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Green">Green<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Cyan">Cyan<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Blue">Blue<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="Magenta">Magenta<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+			<div class="swatch" data-color="White" data-neutral="1">White<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
+		</div>
 	</div>
 
 	<div class="controls-wrap">
@@ -160,44 +210,12 @@
 			</div>
 		</div>
 
-	</div>
+		<div class="controls palette-card">
+			<header><span>Palette</span></header>
+			<pre id="palette"></pre>
+		</div>
 
-	<h2>Dim</h2>
-	<div class="grid" data-group="Dim">
-		<div class="swatch" data-color="Black" data-neutral="1">Black<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Red">Red<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Yellow">Yellow<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Green">Green<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Cyan">Cyan<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Blue">Blue<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Magenta">Magenta<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="White" data-neutral="1">White<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
 	</div>
-
-	<h2 style="margin-top:1.5rem">Normal</h2>
-	<div class="grid" data-group="Normal">
-		<div class="swatch" data-color="Black" data-neutral="1">Black<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Red">Red<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Yellow">Yellow<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Green">Green<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Cyan">Cyan<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Blue">Blue<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Magenta">Magenta<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="White" data-neutral="1">White<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-	</div>
-
-	<h2 style="margin-top:1.5rem">Bright</h2>
-	<div class="grid" data-group="Bright">
-		<div class="swatch" data-color="Black" data-neutral="1">Black<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Red">Red<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Yellow">Yellow<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Green">Green<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Cyan">Cyan<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Blue">Blue<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="Magenta">Magenta<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-		<div class="swatch" data-color="White" data-neutral="1">White<span class="badge"><span class="dot"></span><span class="ratio"></span></span></div>
-	</div>
-	<pre id="palette"></pre>
 
 	<script>
 		const RAINBOW = ['Black', 'Red', 'Yellow', 'Green', 'Cyan', 'Blue', 'Magenta', 'White'];
