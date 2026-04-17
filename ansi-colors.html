@@ -52,6 +52,7 @@
 			<option value="nord">Nord-ish</option>
 			<option value="muted">Muted</option>
 			<option value="vivid">Vivid</option>
+			<option value="kizuna">Kizuna AI</option>
 		</select>
 		<button id="btn-reset">Reset</button>
 		<button id="btn-toggle">☀ Light</button>
@@ -258,6 +259,14 @@
 				params: {
 					dark:  { Dim: { l: 0.52, c: 0.12 }, Normal: { l: 0.70, c: 0.16 }, Bright: { l: 0.80, c: 0.20 } },
 					light: { Dim: { l: 0.40, c: 0.12 }, Normal: { l: 0.50, c: 0.16 }, Bright: { l: 0.58, c: 0.20 } },
+				},
+			},
+			kizuna: {
+				hues:   { Red: 18, Yellow: 98, Green: 140, Cyan: 198, Blue: 266, Magenta: 322, Black: 322, White: 282 },
+				temp: -4, neutralSat: 0.85,
+				params: {
+					dark:  { Dim: { l: 0.54, c: 0.11 }, Normal: { l: 0.71, c: 0.14 }, Bright: { l: 0.82, c: 0.17 } },
+					light: { Dim: { l: 0.41, c: 0.11 }, Normal: { l: 0.51, c: 0.14 }, Bright: { l: 0.59, c: 0.17 } },
 				},
 			},
 		};
