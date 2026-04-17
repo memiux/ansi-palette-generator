@@ -41,7 +41,7 @@
 		button:hover, select:hover { border-color: var(--fg); }
 		select option { background: var(--bg); color: var(--fg); }
 		.palette-card { display: flex; flex-direction: column; }
-		.palette-card pre { margin: 0; line-height: 1.6; color: var(--label); overflow-y: auto; flex: 1; }
+		.palette-card pre { margin: 0; min-width: 12rem; max-height: 22rem; line-height: 1.6; color: var(--label); overflow-y: auto; flex: 1; }
 		@media (max-width: 700px) {
 			body { padding: 1rem; }
 			.controls-wrap { flex-direction: column; }
@@ -52,22 +52,41 @@
 		@media (max-width: 420px) {
 			.grid { grid-template-columns: repeat(2, 1fr); }
 		}
+		.toolbar-sep { width: 1px; background: var(--border); align-self: stretch; margin: 0 .1rem; }
+		label[for="import-file"], label#btn-import-label {
+			padding: .4rem .75rem; font-family: monospace; font-size: .85rem;
+			background: transparent; color: var(--fg); border: 1px solid var(--label);
+			border-radius: 4px; cursor: pointer;
+		}
+		label#btn-import-label:hover { border-color: var(--fg); }
+		#import-error { font-size: .75rem; color: #e74c3c; display: none; }
+		#import-error.visible { display: inline; }
 	</style>
 </head>
 <body>
 
 	<div class="toolbar">
 		<select id="preset-select">
-			<option value="default">Default</option>
-			<option value="warm">Warm</option>
-			<option value="cool">Cool</option>
-			<option value="nord">Nord-ish</option>
-			<option value="muted">Muted</option>
-			<option value="vivid">Vivid</option>
-			<option value="kizuna">Kizuna AI</option>
+			<optgroup label="Built-in">
+				<option value="default">Default</option>
+				<option value="warm">Warm</option>
+				<option value="cool">Cool</option>
+				<option value="nord">Nord-ish</option>
+				<option value="muted">Muted</option>
+				<option value="vivid">Vivid</option>
+				<option value="kizuna">Kizuna AI</option>
+			</optgroup>
+			<optgroup id="custom-optgroup" label="Custom" style="display:none"></optgroup>
 		</select>
+		<button id="btn-save-preset" title="Save current state as a custom preset">★ Save</button>
+		<button id="btn-delete-preset" title="Delete selected custom preset" style="display:none">✕ Delete</button>
+		<span class="toolbar-sep"></span>
+		<button id="btn-export" title="Export current state as JSON">↓ Export</button>
+		<label id="btn-import-label" title="Import a preset JSON file">↑ Import<input type="file" id="import-file" accept=".json" style="display:none"></label>
+		<span class="toolbar-sep"></span>
 		<button id="btn-reset">Reset</button>
 		<button id="btn-toggle">☀ Light</button>
+		<span id="import-error"></span>
 	</div>
 
 	<div class="swatches-card">
@@ -481,13 +500,163 @@
 			});
 		});
 
+		// ── Preset persistence helpers ──────────────────────────────────────────
+
+		function captureCurrentState() {
+			const mp = { Dim: {...params.Dim}, Normal: {...params.Normal}, Bright: {...params.Bright} };
+			return { hues: {...hues}, temp: temperature, neutralSat, params: { dark: mp, light: mp } };
+		}
+
+		function loadCustomPresets() {
+			try { return JSON.parse(localStorage.getItem('ansi-custom-presets') || '{}'); }
+			catch { return {}; }
+		}
+
+		function saveCustomPreset(name, preset) {
+			const all = loadCustomPresets();
+			let candidate = name, n = 2;
+			while (all[candidate]) { candidate = `${name} (${n++})`; }
+			all[candidate] = preset;
+			try { localStorage.setItem('ansi-custom-presets', JSON.stringify(all)); }
+			catch { showImportError('Storage full'); return null; }
+			return candidate;
+		}
+
+		function deleteCustomPreset(name) {
+			const all = loadCustomPresets();
+			delete all[name];
+			localStorage.setItem('ansi-custom-presets', JSON.stringify(all));
+		}
+
+		function rebuildCustomOptgroup() {
+			const group = document.getElementById('custom-optgroup');
+			group.innerHTML = '';
+			const all = loadCustomPresets();
+			const names = Object.keys(all);
+			group.style.display = names.length ? '' : 'none';
+			names.forEach(name => {
+				const opt = document.createElement('option');
+				opt.value = 'custom:' + name;
+				opt.textContent = '★ ' + name;
+				group.appendChild(opt);
+			});
+		}
+
+		function updateDeleteButton() {
+			const sel = document.getElementById('preset-select');
+			document.getElementById('btn-delete-preset').style.display =
+				sel.value.startsWith('custom:') ? '' : 'none';
+		}
+
+		function getActivePreset() {
+			const val = document.getElementById('preset-select').value;
+			if (!val) return null;
+			if (val.startsWith('custom:')) return loadCustomPresets()[val.slice(7)] || null;
+			return PRESETS[val] || null;
+		}
+
+		function validatePreset(obj) {
+			if (!obj || typeof obj !== 'object') return 'Not an object';
+			const hueKeys = ['Red','Yellow','Green','Cyan','Blue','Magenta','Black','White'];
+			if (!obj.hues || hueKeys.some(k => typeof obj.hues[k] !== 'number')) return 'Missing or invalid hues';
+			if (typeof obj.temp !== 'number') return 'Missing temp';
+			if (typeof obj.neutralSat !== 'number') return 'Missing neutralSat';
+			if (!obj.params) return 'Missing params';
+			for (const mode of ['dark','light']) {
+				if (!obj.params[mode]) return `Missing params.${mode}`;
+				for (const g of ['Dim','Normal','Bright']) {
+					const gp = obj.params[mode][g];
+					if (!gp || typeof gp.l !== 'number' || typeof gp.c !== 'number') return `Invalid params.${mode}.${g}`;
+				}
+			}
+			return null;
+		}
+
+		function showImportError(msg) {
+			const el = document.getElementById('import-error');
+			el.textContent = msg;
+			el.classList.add('visible');
+			clearTimeout(showImportError._t);
+			showImportError._t = setTimeout(() => el.classList.remove('visible'), 4000);
+		}
+
+		function exportCurrentState() {
+			const sel  = document.getElementById('preset-select');
+			const name = sel.value.startsWith('custom:') ? sel.value.slice(7)
+			           : sel.value ? sel.options[sel.selectedIndex].text : '';
+			const filename = name ? `Palette - ${name}.json` : 'Palette.json';
+			const json = JSON.stringify(captureCurrentState(), null, 2);
+			const url  = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+			const a    = Object.assign(document.createElement('a'), { href: url, download: filename });
+			a.click();
+			URL.revokeObjectURL(url);
+		}
+
+		// ── Event handlers ──────────────────────────────────────────────────────
+
 		document.getElementById('preset-select').addEventListener('change', function() {
-			if (this.value && PRESETS[this.value]) applyPreset(PRESETS[this.value]);
+			updateDeleteButton();
+			if (!this.value) return;
+			if (this.value.startsWith('custom:')) {
+				const p = loadCustomPresets()[this.value.slice(7)];
+				if (p) applyPreset(p);
+			} else if (PRESETS[this.value]) {
+				applyPreset(PRESETS[this.value]);
+			}
 		});
 
 		document.getElementById('btn-reset').addEventListener('click', () => {
 			document.getElementById('preset-select').value = 'default';
+			updateDeleteButton();
 			applyPreset(PRESETS.default);
+		});
+
+		document.getElementById('btn-save-preset').addEventListener('click', () => {
+			const raw = prompt('Preset name:', 'My Preset');
+			if (!raw) return;
+			const name = raw.trim();
+			if (!name) return;
+			if (PRESETS[name]) { showImportError(`"${name}" is a built-in preset name`); return; }
+			const stored = saveCustomPreset(name, captureCurrentState());
+			if (!stored) return;
+			rebuildCustomOptgroup();
+			document.getElementById('preset-select').value = 'custom:' + stored;
+			updateDeleteButton();
+		});
+
+		document.getElementById('btn-delete-preset').addEventListener('click', () => {
+			const sel = document.getElementById('preset-select');
+			if (!sel.value.startsWith('custom:')) return;
+			const name = sel.value.slice(7);
+			if (!confirm(`Delete preset "${name}"?`)) return;
+			deleteCustomPreset(name);
+			rebuildCustomOptgroup();
+			sel.value = '';
+			updateDeleteButton();
+		});
+
+		document.getElementById('btn-export').addEventListener('click', exportCurrentState);
+
+		document.getElementById('import-file').addEventListener('change', function() {
+			const file = this.files[0];
+			if (!file) return;
+			const baseName = file.name.replace(/\.json$/i, '') || 'Imported';
+			const reader = new FileReader();
+			reader.onload = e => {
+				let obj;
+				try { obj = JSON.parse(e.target.result); }
+				catch { showImportError('Invalid JSON'); this.value = ''; return; }
+				const err = validatePreset(obj);
+				if (err) { showImportError('Import failed: ' + err); this.value = ''; return; }
+				const stored = saveCustomPreset(baseName, obj);
+				if (!stored) { this.value = ''; return; }
+				rebuildCustomOptgroup();
+				document.getElementById('preset-select').value = 'custom:' + stored;
+				updateDeleteButton();
+				applyPreset(obj);
+				this.value = '';
+			};
+			reader.readAsText(file);
 		});
 
 		document.getElementById('btn-toggle').addEventListener('click', () => {
@@ -496,9 +665,8 @@
 			html.dataset.mode = next;
 			document.getElementById('btn-toggle').textContent = next === 'dark' ? '\u2600 Light' : '\u263E Dark';
 
-			const presetKey = document.getElementById('preset-select').value;
-			if (presetKey && PRESETS[presetKey]) {
-				const preset = PRESETS[presetKey];
+			const preset = getActivePreset();
+			if (preset) {
 				['Dim', 'Normal', 'Bright'].forEach(g => Object.assign(params[g], preset.params[next][g]));
 				syncSlidersToState(preset);
 			} else {
@@ -514,6 +682,8 @@
 		});
 
 		applySwatches();
+		rebuildCustomOptgroup();
+		updateDeleteButton();
 	</script>
 </body>
 </html>
