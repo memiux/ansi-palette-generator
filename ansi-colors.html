@@ -474,6 +474,13 @@
 				const preset = PRESETS[presetKey];
 				['Dim', 'Normal', 'Bright'].forEach(g => Object.assign(params[g], preset.params[next][g]));
 				syncSlidersToState(preset);
+			} else {
+				document.querySelectorAll('input[data-group]').forEach(slider => {
+					const g = slider.dataset.group;
+					const p = slider.dataset.param;
+					const output = slider.nextElementSibling;
+					markOutput(output, params[g][p].toFixed(2), DEFAULTS.params[next][g][p].toFixed(2));
+				});
 			}
 
 			applySwatches();
