@@ -15,8 +15,9 @@ enough for any terminal emulator or editor theme format.
 - Displays 24 swatches: 3 rows (Dim / Normal / Bright) × 8 colors
 - Colors are generated algorithmically from OKLCH parameters, not hardcoded
 - Sliders for per-group L and C, per-color hue angles (including Black and White), neutral saturation (N.Sat), and a global temperature offset
-- Dark/Light mode toggle
-- Preset selector (Default, Warm, Cool, Nord-ish, Muted, Vivid)
+- Dark/Light mode toggle (each mode has independent L/C params)
+- Preset selector with built-in presets (Default, Warm, Cool, Nord-ish, Muted, Vivid, Kizuna AI) and user-saved custom presets persisted in localStorage
+- Export current state as a named JSON file; import JSON to restore a saved state
 - WCAG contrast badge on each swatch (ratio + AAA/AA/A/fail dot)
 - `<pre>` palette showing all hex values, grouped and sorted in rainbow order
 - `title` attribute on each swatch shows the resolved hex value
@@ -110,17 +111,23 @@ via `Math.abs(temperature) * 0.003`.
 
 ## State Model
 
-All mutable state lives in three JS objects + two scalars:
+All mutable state lives in these JS objects + two scalars:
 
 ```js
-const hues   = { Red, Yellow, Green, Cyan, Blue, Magenta, Black, White }  // current hue angles
-const params = { Dim: {l, c}, Normal: {l, c}, Bright: {l, c} }
+const hues       = { Red, Yellow, Green, Cyan, Blue, Magenta, Black, White }  // current hue angles
+const params     = { Dim: {l, c}, Normal: {l, c}, Bright: {l, c} }            // live L/C for current mode
+const paramsStore = {
+  dark:  { Dim: {l, c}, Normal: {l, c}, Bright: {l, c} },  // persisted L/C for dark mode
+  light: { Dim: {l, c}, Normal: {l, c}, Bright: {l, c} },  // persisted L/C for light mode
+}
 let temperature = 0
 let neutralSat  = 1   // 0–1 multiplier on neutral chroma
 
 const DEFAULTS = { ... }  // frozen reference for "changed" detection
-const PRESETS  = { ... }  // named configurations
+const PRESETS  = { ... }  // named built-in configurations
 ```
+
+`params` is the working copy for the current mode — all sliders read/write it directly. `paramsStore` tracks both modes independently so export and mode-switching are always faithful. The invariant: whenever `params` is mutated (slider input, preset apply, mode toggle), `paramsStore[currentMode()]` is kept in sync.
 
 `applySwatches()` is the single render function — all controls call it after
 mutating state. No reactive framework, no virtual DOM.
@@ -197,7 +204,7 @@ Each preset is a full state snapshot:
 
 ```js
 {
-  hues:      { Red, Yellow, Green, Cyan, Blue, Magenta, Black, White },
+  hues:      { Black, Red, Yellow, Green, Cyan, Blue, Magenta, White },
   temp:      0,
   neutralSat: 1,
   params: {
@@ -208,14 +215,21 @@ Each preset is a full state snapshot:
 ```
 
 `applyPreset(preset)` reads `currentMode()`, applies `preset.params[mode]` to
-the live `params` state, calls `syncSlidersToState(preset)` to update all slider
+the live `params` state, populates **both** `paramsStore.dark` and `paramsStore.light`
+from the preset, calls `syncSlidersToState(preset)` to update all slider
 positions and output values/classes, then calls `applySwatches()`.
 
 The mode toggle re-applies the active preset's L/C params for the new mode (if
-a preset is selected). If no preset is active, manual L/C values are preserved
-across the toggle.
+a preset is selected). If no preset is active, the toggle flushes `params` →
+`paramsStore[prev]` and loads `paramsStore[next]` → `params`, so dark and light
+modes each remember their own independently tuned L/C values.
 
 Manual slider interaction clears the preset select (`value = ''`).
+
+**Custom preset persistence** uses localStorage key `"ansi-custom-presets"` — a flat
+JSON object keyed by preset name. Custom preset option values are prefixed with
+`"custom:"` (e.g. `"custom:My Preset"`) to distinguish them from built-in keys in
+the `<select>`. `getActivePreset()` handles both namespaces.
 
 **Neutral hue angles are preset-specific** — each preset defines Black/White hues
 to match its vibe (warm amber for Warm, slate-blue for Cool, etc.) rather than
@@ -239,8 +253,9 @@ const RAINBOW = ['Black', 'Red', 'Yellow', 'Green', 'Cyan', 'Blue', 'Magenta', '
 ## Dark / Light Mode
 
 Each preset stores separate `dark` and `light` L/C params. Toggling mode
-re-applies the correct set from the active preset. Light mode uses lower L
-values (~0.42–0.60) so colors read well against `#f5f5f5`.
+re-applies the correct set from the active preset (or from `paramsStore` when
+no preset is active). Light mode uses lower L values (~0.42–0.60) so colors
+read well against `#f5f5f5`.
 
 ---
 

@@ -42,6 +42,8 @@
 		select option { background: var(--bg); color: var(--fg); }
 		.palette-card { display: flex; flex-direction: column; }
 		.palette-card pre { margin: 0; min-width: 12rem; max-height: 22rem; line-height: 1.6; color: var(--label); overflow-y: auto; flex: 1; }
+		.palette-card header { justify-content: space-between; }
+		.palette-card header button { font-size: .75rem; padding: .2rem .5rem; }
 		@media (max-width: 700px) {
 			body { padding: 1rem; }
 			.controls-wrap { flex-direction: column; }
@@ -230,7 +232,7 @@
 		</div>
 
 		<div class="controls palette-card">
-			<header><span>Palette</span></header>
+			<header><span>Palette</span><button id="btn-copy-palette" title="Copy as Zed theme keys">Copy</button></header>
 			<pre id="palette"></pre>
 		</div>
 
@@ -240,7 +242,7 @@
 		const RAINBOW = ['Black', 'Red', 'Yellow', 'Green', 'Cyan', 'Blue', 'Magenta', 'White'];
 
 		const DEFAULTS = {
-			hues:   { Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328, Black: 60, White: 260 },
+			hues:   { Black: 60, Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328, White: 260 },
 			temp:   0,
 			neutralSat: 1,
 			params: {
@@ -251,7 +253,7 @@
 
 		const PRESETS = {
 			default: {
-				hues:   { Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328, Black: 60, White: 260 },
+				hues:   { Black: 60, Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328, White: 260 },
 				temp: 0, neutralSat: 1,
 				params: {
 					dark:  { Dim: { l: 0.55, c: 0.07 }, Normal: { l: 0.72, c: 0.10 }, Bright: { l: 0.82, c: 0.13 } },
@@ -259,7 +261,7 @@
 				},
 			},
 			warm: {
-				hues:   { Red: 22, Yellow: 95, Green: 140, Cyan: 188, Blue: 258, Magenta: 320, Black: 55, White: 88 },
+				hues:   { Black: 55, Red: 22, Yellow: 95, Green: 140, Cyan: 188, Blue: 258, Magenta: 320, White: 88 },
 				temp: -8, neutralSat: 1,
 				params: {
 					dark:  { Dim: { l: 0.53, c: 0.08 }, Normal: { l: 0.70, c: 0.11 }, Bright: { l: 0.80, c: 0.14 } },
@@ -267,7 +269,7 @@
 				},
 			},
 			cool: {
-				hues:   { Red: 35, Yellow: 115, Green: 148, Cyan: 200, Blue: 270, Magenta: 335, Black: 215, White: 245 },
+				hues:   { Black: 215, Red: 35, Yellow: 115, Green: 148, Cyan: 200, Blue: 270, Magenta: 335, White: 245 },
 				temp: 8, neutralSat: 1,
 				params: {
 					dark:  { Dim: { l: 0.56, c: 0.07 }, Normal: { l: 0.73, c: 0.10 }, Bright: { l: 0.83, c: 0.12 } },
@@ -275,7 +277,7 @@
 				},
 			},
 			nord: {
-				hues:   { Red: 15, Yellow: 92, Green: 143, Cyan: 196, Blue: 248, Magenta: 316, Black: 210, White: 228 },
+				hues:   { Black: 210, Red: 15, Yellow: 92, Green: 143, Cyan: 196, Blue: 248, Magenta: 316, White: 228 },
 				temp: 3, neutralSat: 1,
 				params: {
 					dark:  { Dim: { l: 0.50, c: 0.06 }, Normal: { l: 0.68, c: 0.08 }, Bright: { l: 0.78, c: 0.10 } },
@@ -283,7 +285,7 @@
 				},
 			},
 			muted: {
-				hues:   { Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328, Black: 65, White: 250 },
+				hues:   { Black: 65, Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328, White: 250 },
 				temp: 0, neutralSat: 1,
 				params: {
 					dark:  { Dim: { l: 0.55, c: 0.04 }, Normal: { l: 0.72, c: 0.06 }, Bright: { l: 0.82, c: 0.08 } },
@@ -291,7 +293,7 @@
 				},
 			},
 			vivid: {
-				hues:   { Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328, Black: 40, White: 285 },
+				hues:   { Black: 40, Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328, White: 285 },
 				temp: 0, neutralSat: 1,
 				params: {
 					dark:  { Dim: { l: 0.52, c: 0.12 }, Normal: { l: 0.70, c: 0.16 }, Bright: { l: 0.80, c: 0.20 } },
@@ -299,7 +301,7 @@
 				},
 			},
 			kizuna: {
-				hues:   { Red: 18, Yellow: 98, Green: 140, Cyan: 198, Blue: 266, Magenta: 322, Black: 322, White: 282 },
+				hues:   { Black: 322, Red: 18, Yellow: 98, Green: 140, Cyan: 198, Blue: 266, Magenta: 322, White: 282 },
 				temp: -4, neutralSat: 0.85,
 				params: {
 					dark:  { Dim: { l: 0.54, c: 0.11 }, Normal: { l: 0.71, c: 0.14 }, Bright: { l: 0.82, c: 0.17 } },
@@ -315,6 +317,10 @@
 			Dim:    { ...DEFAULTS.params.dark.Dim },
 			Normal: { ...DEFAULTS.params.dark.Normal },
 			Bright: { ...DEFAULTS.params.dark.Bright },
+		};
+		const paramsStore = {
+			dark:  { Dim: {...DEFAULTS.params.dark.Dim},  Normal: {...DEFAULTS.params.dark.Normal},  Bright: {...DEFAULTS.params.dark.Bright}  },
+			light: { Dim: {...DEFAULTS.params.light.Dim}, Normal: {...DEFAULTS.params.light.Normal}, Bright: {...DEFAULTS.params.light.Bright} },
 		};
 		let temperature = 0;
 		let neutralSat  = 1;
@@ -410,6 +416,29 @@
 			document.getElementById('palette').textContent = lines.join('\n').trimEnd();
 		}
 
+		function buildZedPalette() {
+			const PREFIX = { Dim: 'dim_', Normal: '', Bright: 'bright_' };
+			const lines = [];
+			document.querySelectorAll('.grid[data-group]').forEach(grid => {
+				const group = grid.dataset.group;
+				const map = Object.fromEntries(
+					[...grid.querySelectorAll('.swatch')].map(el => [el.dataset.color, el])
+				);
+				RAINBOW.forEach(name => {
+					const key = `terminal.ansi.${PREFIX[group]}${name.toLowerCase()}`;
+					lines.push(`"${key}": "${map[name].title}",`);
+				});
+			});
+			return lines.join('\n');
+		}
+
+		document.getElementById('btn-copy-palette').addEventListener('click', function() {
+			navigator.clipboard.writeText(buildZedPalette()).then(() => {
+				this.textContent = 'Copied!';
+				setTimeout(() => this.textContent = 'Copy', 1500);
+			});
+		});
+
 		function markOutput(outputEl, currentStr, defaultStr) {
 			outputEl.classList.toggle('changed', currentStr !== defaultStr);
 		}
@@ -451,7 +480,11 @@
 		function applyPreset(preset) {
 			const mode = currentMode();
 			Object.assign(hues, preset.hues);
-			['Dim', 'Normal', 'Bright'].forEach(g => Object.assign(params[g], preset.params[mode][g]));
+			['Dim', 'Normal', 'Bright'].forEach(g => {
+				Object.assign(params[g],            preset.params[mode][g]);
+				Object.assign(paramsStore.dark[g],  preset.params.dark[g]);
+				Object.assign(paramsStore.light[g], preset.params.light[g]);
+			});
 			temperature = preset.temp;
 			neutralSat  = preset.neutralSat;
 			syncSlidersToState(preset);
@@ -493,6 +526,7 @@
 				const value  = parseFloat(slider.value);
 				const output = slider.nextElementSibling;
 				params[slider.dataset.group][slider.dataset.param] = value;
+				paramsStore[currentMode()][slider.dataset.group][slider.dataset.param] = value;
 				output.value = value.toFixed(2);
 				markOutput(output, value.toFixed(2), DEFAULTS.params[currentMode()][slider.dataset.group][slider.dataset.param].toFixed(2));
 				document.getElementById('preset-select').value = '';
@@ -503,8 +537,17 @@
 		// ── Preset persistence helpers ──────────────────────────────────────────
 
 		function captureCurrentState() {
-			const mp = { Dim: {...params.Dim}, Normal: {...params.Normal}, Bright: {...params.Bright} };
-			return { hues: {...hues}, temp: temperature, neutralSat, params: { dark: mp, light: mp } };
+			const mode = currentMode();
+			['Dim', 'Normal', 'Bright'].forEach(g => Object.assign(paramsStore[mode][g], params[g]));
+			return {
+				hues:      { ...hues },
+				temp:      temperature,
+				neutralSat,
+				params: {
+					dark:  { Dim: {...paramsStore.dark.Dim},  Normal: {...paramsStore.dark.Normal},  Bright: {...paramsStore.dark.Bright}  },
+					light: { Dim: {...paramsStore.light.Dim}, Normal: {...paramsStore.light.Normal}, Bright: {...paramsStore.light.Bright} },
+				},
+			};
 		}
 
 		function loadCustomPresets() {
@@ -557,7 +600,7 @@
 
 		function validatePreset(obj) {
 			if (!obj || typeof obj !== 'object') return 'Not an object';
-			const hueKeys = ['Red','Yellow','Green','Cyan','Blue','Magenta','Black','White'];
+			const hueKeys = ['Black','Red','Yellow','Green','Cyan','Blue','Magenta','White'];
 			if (!obj.hues || hueKeys.some(k => typeof obj.hues[k] !== 'number')) return 'Missing or invalid hues';
 			if (typeof obj.temp !== 'number') return 'Missing temp';
 			if (typeof obj.neutralSat !== 'number') return 'Missing neutralSat';
@@ -661,7 +704,8 @@
 
 		document.getElementById('btn-toggle').addEventListener('click', () => {
 			const html = document.documentElement;
-			const next = html.dataset.mode === 'dark' ? 'light' : 'dark';
+			const prev = html.dataset.mode;
+			const next = prev === 'dark' ? 'light' : 'dark';
 			html.dataset.mode = next;
 			document.getElementById('btn-toggle').textContent = next === 'dark' ? '\u2600 Light' : '\u263E Dark';
 
@@ -670,11 +714,16 @@
 				['Dim', 'Normal', 'Bright'].forEach(g => Object.assign(params[g], preset.params[next][g]));
 				syncSlidersToState(preset);
 			} else {
+				['Dim', 'Normal', 'Bright'].forEach(g => Object.assign(paramsStore[prev][g], params[g]));
+				['Dim', 'Normal', 'Bright'].forEach(g => Object.assign(params[g], paramsStore[next][g]));
 				document.querySelectorAll('input[data-group]').forEach(slider => {
-					const g = slider.dataset.group;
-					const p = slider.dataset.param;
+					const g     = slider.dataset.group;
+					const p     = slider.dataset.param;
+					const value = params[g][p];
 					const output = slider.nextElementSibling;
-					markOutput(output, params[g][p].toFixed(2), DEFAULTS.params[next][g][p].toFixed(2));
+					slider.value  = value;
+					output.value  = value.toFixed(2);
+					markOutput(output, value.toFixed(2), DEFAULTS.params[next][g][p].toFixed(2));
 				});
 			}
 
