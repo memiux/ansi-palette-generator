@@ -62,6 +62,11 @@
 		<div class="controls">
 			<header><span>Hue (H)</span></header>
 			<div class="slider-row">
+				<label>Black</label>
+				<input type="range" data-hue="Black" min="0" max="360" step="1" value="60">
+				<output>60</output>
+			</div>
+			<div class="slider-row">
 				<label>Red</label>
 				<input type="range" data-hue="Red" min="10" max="60" step="1" value="29">
 				<output>29</output>
@@ -91,7 +96,17 @@
 				<input type="range" data-hue="Magenta" min="295" max="360" step="1" value="328">
 				<output>328</output>
 			</div>
+			<div class="slider-row">
+				<label>White</label>
+				<input type="range" data-hue="White" min="0" max="360" step="1" value="260">
+				<output>260</output>
+			</div>
 			<hr class="divider">
+			<div class="slider-row">
+				<label>N.Sat</label>
+				<input type="range" id="nsat-slider" min="0" max="1" step="0.01" value="1">
+				<output id="nsat-output">1.00</output>
+			</div>
 			<div class="slider-row">
 				<label>Temp</label>
 				<input type="range" id="temp-slider" min="-20" max="20" step="1" value="0">
@@ -184,58 +199,79 @@
 	<pre id="palette"></pre>
 
 	<script>
-		const RAINBOW = ['Red', 'Yellow', 'Green', 'Cyan', 'Blue', 'Magenta', 'Black', 'White'];
+		const RAINBOW = ['Black', 'Red', 'Yellow', 'Green', 'Cyan', 'Blue', 'Magenta', 'White'];
 
 		const DEFAULTS = {
-			hues:   { Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328 },
+			hues:   { Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328, Black: 60, White: 260 },
 			temp:   0,
+			neutralSat: 1,
 			params: {
-				Dim:    { l: 0.55, c: 0.07 },
-				Normal: { l: 0.72, c: 0.10 },
-				Bright: { l: 0.82, c: 0.13 },
+				dark:  { Dim: { l: 0.55, c: 0.07 }, Normal: { l: 0.72, c: 0.10 }, Bright: { l: 0.82, c: 0.13 } },
+				light: { Dim: { l: 0.42, c: 0.07 }, Normal: { l: 0.52, c: 0.10 }, Bright: { l: 0.60, c: 0.13 } },
 			},
 		};
 
 		const PRESETS = {
 			default: {
-				hues:   { Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328 },
-				temp:   0,
-				params: { Dim: { l: 0.55, c: 0.07 }, Normal: { l: 0.72, c: 0.10 }, Bright: { l: 0.82, c: 0.13 } },
+				hues:   { Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328, Black: 60, White: 260 },
+				temp: 0, neutralSat: 1,
+				params: {
+					dark:  { Dim: { l: 0.55, c: 0.07 }, Normal: { l: 0.72, c: 0.10 }, Bright: { l: 0.82, c: 0.13 } },
+					light: { Dim: { l: 0.42, c: 0.07 }, Normal: { l: 0.52, c: 0.10 }, Bright: { l: 0.60, c: 0.13 } },
+				},
 			},
 			warm: {
-				hues:   { Red: 22, Yellow: 95, Green: 140, Cyan: 188, Blue: 258, Magenta: 320 },
-				temp:   -8,
-				params: { Dim: { l: 0.53, c: 0.08 }, Normal: { l: 0.70, c: 0.11 }, Bright: { l: 0.80, c: 0.14 } },
+				hues:   { Red: 22, Yellow: 95, Green: 140, Cyan: 188, Blue: 258, Magenta: 320, Black: 55, White: 88 },
+				temp: -8, neutralSat: 1,
+				params: {
+					dark:  { Dim: { l: 0.53, c: 0.08 }, Normal: { l: 0.70, c: 0.11 }, Bright: { l: 0.80, c: 0.14 } },
+					light: { Dim: { l: 0.40, c: 0.08 }, Normal: { l: 0.50, c: 0.11 }, Bright: { l: 0.58, c: 0.14 } },
+				},
 			},
 			cool: {
-				hues:   { Red: 35, Yellow: 115, Green: 148, Cyan: 200, Blue: 270, Magenta: 335 },
-				temp:   8,
-				params: { Dim: { l: 0.56, c: 0.07 }, Normal: { l: 0.73, c: 0.10 }, Bright: { l: 0.83, c: 0.12 } },
+				hues:   { Red: 35, Yellow: 115, Green: 148, Cyan: 200, Blue: 270, Magenta: 335, Black: 215, White: 245 },
+				temp: 8, neutralSat: 1,
+				params: {
+					dark:  { Dim: { l: 0.56, c: 0.07 }, Normal: { l: 0.73, c: 0.10 }, Bright: { l: 0.83, c: 0.12 } },
+					light: { Dim: { l: 0.43, c: 0.07 }, Normal: { l: 0.53, c: 0.10 }, Bright: { l: 0.61, c: 0.12 } },
+				},
 			},
 			nord: {
-				hues:   { Red: 15, Yellow: 92, Green: 143, Cyan: 196, Blue: 248, Magenta: 316 },
-				temp:   3,
-				params: { Dim: { l: 0.50, c: 0.06 }, Normal: { l: 0.68, c: 0.08 }, Bright: { l: 0.78, c: 0.10 } },
+				hues:   { Red: 15, Yellow: 92, Green: 143, Cyan: 196, Blue: 248, Magenta: 316, Black: 210, White: 228 },
+				temp: 3, neutralSat: 1,
+				params: {
+					dark:  { Dim: { l: 0.50, c: 0.06 }, Normal: { l: 0.68, c: 0.08 }, Bright: { l: 0.78, c: 0.10 } },
+					light: { Dim: { l: 0.38, c: 0.06 }, Normal: { l: 0.48, c: 0.08 }, Bright: { l: 0.56, c: 0.10 } },
+				},
 			},
 			muted: {
-				hues:   { Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328 },
-				temp:   0,
-				params: { Dim: { l: 0.55, c: 0.04 }, Normal: { l: 0.72, c: 0.06 }, Bright: { l: 0.82, c: 0.08 } },
+				hues:   { Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328, Black: 65, White: 250 },
+				temp: 0, neutralSat: 1,
+				params: {
+					dark:  { Dim: { l: 0.55, c: 0.04 }, Normal: { l: 0.72, c: 0.06 }, Bright: { l: 0.82, c: 0.08 } },
+					light: { Dim: { l: 0.42, c: 0.04 }, Normal: { l: 0.52, c: 0.06 }, Bright: { l: 0.60, c: 0.08 } },
+				},
 			},
 			vivid: {
-				hues:   { Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328 },
-				temp:   0,
-				params: { Dim: { l: 0.52, c: 0.12 }, Normal: { l: 0.70, c: 0.16 }, Bright: { l: 0.80, c: 0.20 } },
+				hues:   { Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328, Black: 40, White: 285 },
+				temp: 0, neutralSat: 1,
+				params: {
+					dark:  { Dim: { l: 0.52, c: 0.12 }, Normal: { l: 0.70, c: 0.16 }, Bright: { l: 0.80, c: 0.20 } },
+					light: { Dim: { l: 0.40, c: 0.12 }, Normal: { l: 0.50, c: 0.16 }, Bright: { l: 0.58, c: 0.20 } },
+				},
 			},
 		};
 
+		function currentMode() { return document.documentElement.dataset.mode; }
+
 		const hues   = { ...DEFAULTS.hues };
 		const params = {
-			Dim:    { ...DEFAULTS.params.Dim },
-			Normal: { ...DEFAULTS.params.Normal },
-			Bright: { ...DEFAULTS.params.Bright },
+			Dim:    { ...DEFAULTS.params.dark.Dim },
+			Normal: { ...DEFAULTS.params.dark.Normal },
+			Bright: { ...DEFAULTS.params.dark.Bright },
 		};
 		let temperature = 0;
+		let neutralSat  = 1;
 
 		const neutralFactor = { Black: 0.42, White: 1.05 };
 
@@ -278,20 +314,19 @@
 		}
 
 		function applySwatches() {
-			const isDark   = document.documentElement.dataset.mode === 'dark';
-			const neutralC = Math.abs(temperature) * 0.003;
-			const neutralH = temperature < 0 ? 60 : 260;
+			const isDark = document.documentElement.dataset.mode === 'dark';
 
 			document.querySelectorAll('.grid[data-group]').forEach(grid => {
-				const group = grid.dataset.group;
+				const group    = grid.dataset.group;
 				const { l, c } = params[group];
+				const neutralC = (c * 0.3 + Math.abs(temperature) * 0.003) * neutralSat;
 
 				grid.querySelectorAll('.swatch').forEach(el => {
 					const name     = el.dataset.color;
 					const neutral  = el.dataset.neutral;
 					const neutralL = Math.min(0.98, Math.max(0.05, l * (neutralFactor[name] ?? 1)));
 					const bgCss = neutral
-						? `oklch(${neutralL.toFixed(2)} ${neutralC.toFixed(4)} ${neutralH})`
+						? `oklch(${neutralL.toFixed(2)} ${neutralC.toFixed(4)} ${hues[name] + temperature})`
 						: `oklch(${l} ${c} ${hues[name] + temperature})`;
 
 					el.style.background = bgCss;
@@ -343,6 +378,12 @@
 				markOutput(output, String(value), String(DEFAULTS.hues[color]));
 			});
 
+			const nsatSlider = document.getElementById('nsat-slider');
+			const nsatOutput = document.getElementById('nsat-output');
+			nsatSlider.value = preset.neutralSat;
+			nsatOutput.value = preset.neutralSat.toFixed(2);
+			markOutput(nsatOutput, preset.neutralSat.toFixed(2), DEFAULTS.neutralSat.toFixed(2));
+
 			const tempSlider = document.getElementById('temp-slider');
 			const tempOutput = document.getElementById('temp-output');
 			tempSlider.value = preset.temp;
@@ -350,23 +391,35 @@
 			markOutput(tempOutput, String(preset.temp), String(DEFAULTS.temp));
 
 			document.querySelectorAll('input[data-group]').forEach(slider => {
+				const mode   = currentMode();
 				const g      = slider.dataset.group;
 				const p      = slider.dataset.param;
-				const value  = preset.params[g][p];
+				const value  = preset.params[mode][g][p];
 				const output = slider.nextElementSibling;
 				slider.value = value;
 				output.value = value.toFixed(2);
-				markOutput(output, value.toFixed(2), DEFAULTS.params[g][p].toFixed(2));
+				markOutput(output, value.toFixed(2), DEFAULTS.params[mode][g][p].toFixed(2));
 			});
 		}
 
 		function applyPreset(preset) {
+			const mode = currentMode();
 			Object.assign(hues, preset.hues);
-			Object.keys(params).forEach(g => Object.assign(params[g], preset.params[g]));
+			['Dim', 'Normal', 'Bright'].forEach(g => Object.assign(params[g], preset.params[mode][g]));
 			temperature = preset.temp;
+			neutralSat  = preset.neutralSat;
 			syncSlidersToState(preset);
 			applySwatches();
 		}
+
+		document.getElementById('nsat-slider').addEventListener('input', function() {
+			neutralSat = parseFloat(this.value);
+			const output = document.getElementById('nsat-output');
+			output.value = neutralSat.toFixed(2);
+			markOutput(output, neutralSat.toFixed(2), DEFAULTS.neutralSat.toFixed(2));
+			document.getElementById('preset-select').value = '';
+			applySwatches();
+		});
 
 		document.getElementById('temp-slider').addEventListener('input', function() {
 			temperature = parseInt(this.value, 10);
@@ -395,7 +448,7 @@
 				const output = slider.nextElementSibling;
 				params[slider.dataset.group][slider.dataset.param] = value;
 				output.value = value.toFixed(2);
-				markOutput(output, value.toFixed(2), DEFAULTS.params[slider.dataset.group][slider.dataset.param].toFixed(2));
+				markOutput(output, value.toFixed(2), DEFAULTS.params[currentMode()][slider.dataset.group][slider.dataset.param].toFixed(2));
 				document.getElementById('preset-select').value = '';
 				applySwatches();
 			});
@@ -415,6 +468,14 @@
 			const next = html.dataset.mode === 'dark' ? 'light' : 'dark';
 			html.dataset.mode = next;
 			document.getElementById('btn-toggle').textContent = next === 'dark' ? '\u2600 Light' : '\u263E Dark';
+
+			const presetKey = document.getElementById('preset-select').value;
+			if (presetKey && PRESETS[presetKey]) {
+				const preset = PRESETS[presetKey];
+				['Dim', 'Normal', 'Bright'].forEach(g => Object.assign(params[g], preset.params[next][g]));
+				syncSlidersToState(preset);
+			}
+
 			applySwatches();
 		});
 

@@ -2,10 +2,9 @@
 
 ## Overview
 
-A self-contained, single-file HTML tool for designing 16-color ANSI terminal
-palettes in pastel style. The primary use case is generating color values for
-a **Zed editor theme** (`kizuna-ai.json`), but the output is generic enough
-for any terminal emulator or editor theme format.
+A self-contained, single-file HTML tool for designing 16-color ANSI terminal palettes in pastel style. 
+The primary use case is generating color values for a **Zed editor theme**, but the output is generic 
+enough for any terminal emulator or editor theme format.
 
 **File:** `ansi-colors.html` — zero dependencies, no build step.
 
@@ -15,7 +14,7 @@ for any terminal emulator or editor theme format.
 
 - Displays 24 swatches: 3 rows (Dim / Normal / Bright) × 8 colors
 - Colors are generated algorithmically from OKLCH parameters, not hardcoded
-- Sliders for per-group L and C, per-color hue angles, and a global temperature offset
+- Sliders for per-group L and C, per-color hue angles (including Black and White), neutral saturation (N.Sat), and a global temperature offset
 - Dark/Light mode toggle
 - Preset selector (Default, Warm, Cool, Nord-ish, Muted, Vivid)
 - WCAG contrast badge on each swatch (ratio + AAA/AA/A/fail dot)
@@ -53,7 +52,7 @@ oklch(L  C  H)
 
 These differ significantly from HSL hue angles. Do not confuse them.
 
-**Default L/C per group:**
+**Default L/C per group (dark mode):**
 
 | Group  | L    | C    |
 |--------|------|------|
@@ -61,37 +60,63 @@ These differ significantly from HSL hue angles. Do not confuse them.
 | Normal | 0.72 | 0.10 |
 | Bright | 0.82 | 0.13 |
 
+**Default L/C per group (light mode):**
+
+| Group  | L    | C    |
+|--------|------|------|
+| Dim    | 0.42 | 0.07 |
+| Normal | 0.52 | 0.10 |
+| Bright | 0.60 | 0.13 |
+
+Light mode L values are ~0.13–0.22 lower so colors stay legible against `#f5f5f5`. C values are identical across modes.
+
 ### Neutrals (Black / White)
 
-Black and White have no hue (C=0). Their lightness is derived from the group's
-L value via fixed factors:
+Black and White have independent hue sliders (full range 0–360°, defaults Black=60°,
+White=260°). Their lightness is derived from the group's L value via fixed factors:
 
 ```js
 neutralFactor = { Black: 0.42, White: 1.05 }
 neutralL = clamp(groupL * factor, 0.05, 0.98)
 ```
 
-When temperature ≠ 0, neutrals receive a tiny chroma tint:
-- `C = abs(temperature) * 0.003`
-- Warm (temp < 0): H = 60° (yellow)
-- Cool (temp > 0): H = 260° (blue)
+Neutral chroma is driven by three inputs combined:
+
+```js
+neutralC = (c * 0.3 + Math.abs(temperature) * 0.003) * neutralSat
+```
+
+- `c * 0.3` — scales with the group's C slider (neutrals at ~30% of chromatic saturation)
+- `Math.abs(temperature) * 0.003` — small additive boost from temperature magnitude
+- `neutralSat` — global multiplier (0–1) that gates both contributions; at 0 neutrals are fully achromatic
+
+Temperature also offsets the neutral hue angle: `hues[name] + temperature`, same as chromatic colors.
+
+**Default hue angles for neutrals:**
+
+| Color | H (°) |
+|-------|-------|
+| Black | 60    |
+| White | 260   |
 
 ### Temperature
 
-A global hue offset applied to all chromatic colors: `hues[color] + temperature`.
+A global hue offset applied to all colors (chromatic and neutral): `hues[color] + temperature`.
 Range: -20 to +20 degrees. Negative = warm (shift toward red/orange),
-positive = cool (shift toward blue/cyan).
+positive = cool (shift toward blue/cyan). Also adds a small chroma boost to neutrals
+via `Math.abs(temperature) * 0.003`.
 
 ---
 
 ## State Model
 
-All mutable state lives in three JS objects + one scalar:
+All mutable state lives in three JS objects + two scalars:
 
 ```js
-const hues   = { Red, Yellow, Green, Cyan, Blue, Magenta }  // current hue angles
+const hues   = { Red, Yellow, Green, Cyan, Blue, Magenta, Black, White }  // current hue angles
 const params = { Dim: {l, c}, Normal: {l, c}, Bright: {l, c} }
 let temperature = 0
+let neutralSat  = 1   // 0–1 multiplier on neutral chroma
 
 const DEFAULTS = { ... }  // frozen reference for "changed" detection
 const PRESETS  = { ... }  // named configurations
@@ -162,7 +187,7 @@ elements**, not custom tags like `<o>`.
 **Known footgun:** If `<o>` is accidentally used instead of `<output>`,
 `output.value = x` silently sets a JS property without updating the DOM,
 and the CSS rule never matches. This bug has occurred multiple times.
-Always verify with: `grep -c '<output' ansi-colors.html` — expected count is 13.
+Always verify with: `grep -c '<output' ansi-colors.html` — expected count is 16.
 
 ---
 
@@ -172,16 +197,29 @@ Each preset is a full state snapshot:
 
 ```js
 {
-  hues:   { Red, Yellow, Green, Cyan, Blue, Magenta },
-  temp:   0,
-  params: { Dim: {l, c}, Normal: {l, c}, Bright: {l, c} },
+  hues:      { Red, Yellow, Green, Cyan, Blue, Magenta, Black, White },
+  temp:      0,
+  neutralSat: 1,
+  params: {
+    dark:  { Dim: {l, c}, Normal: {l, c}, Bright: {l, c} },
+    light: { Dim: {l, c}, Normal: {l, c}, Bright: {l, c} },
+  },
 }
 ```
 
-`applyPreset(preset)` mutates state, calls `syncSlidersToState(preset)` to
-update all slider positions and output values/classes, then calls `applySwatches()`.
+`applyPreset(preset)` reads `currentMode()`, applies `preset.params[mode]` to
+the live `params` state, calls `syncSlidersToState(preset)` to update all slider
+positions and output values/classes, then calls `applySwatches()`.
+
+The mode toggle re-applies the active preset's L/C params for the new mode (if
+a preset is selected). If no preset is active, manual L/C values are preserved
+across the toggle.
 
 Manual slider interaction clears the preset select (`value = ''`).
+
+**Neutral hue angles are preset-specific** — each preset defines Black/White hues
+to match its vibe (warm amber for Warm, slate-blue for Cool, etc.) rather than
+using the DEFAULTS values.
 
 ---
 
@@ -193,38 +231,34 @@ This order is used in both the DOM (swatch grid) and the `<pre>` palette output.
 The `RAINBOW` array drives palette rendering:
 
 ```js
-const RAINBOW = ['Red', 'Yellow', 'Green', 'Cyan', 'Blue', 'Magenta', 'Black', 'White'];
+const RAINBOW = ['Black', 'Red', 'Yellow', 'Green', 'Cyan', 'Blue', 'Magenta', 'White'];
 ```
-
-Note: the grid DOM order differs (Black first) from RAINBOW (Red first).
-This is intentional — the grid puts neutrals on the edges visually.
 
 ---
 
 ## Dark / Light Mode
 
-Two separate L/C value sets are recommended for proper contrast in both modes.
-Currently the tool uses a single set of slider values regardless of mode.
-This is a known limitation — the same L=0.72 looks fine on dark but may
-wash out on light backgrounds.
-
-A future improvement would be storing separate L/C pairs per mode in each
-preset, and applying the correct set on toggle.
+Each preset stores separate `dark` and `light` L/C params. Toggling mode
+re-applies the correct set from the active preset. Light mode uses lower L
+values (~0.42–0.60) so colors read well against `#f5f5f5`.
 
 ---
 
 ## Hue Slider Ranges
 
-Per-color hue sliders are constrained to keep each color recognizable:
+Per-color hue sliders are constrained to keep each color recognizable.
+Black and White use the full range since any tint direction is valid for a neutral.
 
 | Color   | Min | Max | Rationale                    |
 |---------|-----|-----|------------------------------|
+| Black   | 0   | 360 | Full range — neutral tint    |
 | Red     | 10  | 60  | Red to orange                |
 | Yellow  | 75  | 130 | Orange-yellow to lime        |
 | Green   | 120 | 175 | Lime to teal-green           |
 | Cyan    | 175 | 220 | Green-cyan to sky            |
 | Blue    | 220 | 295 | Sky to blue-violet           |
 | Magenta | 295 | 360 | Blue-violet to red-magenta   |
+| White   | 0   | 360 | Full range — neutral tint    |
 
 ---
 
@@ -233,51 +267,3 @@ Per-color hue sliders are constrained to keep each color recognizable:
 OKLCH in CSS requires: Chrome 111+, Firefox 113+, Safari 15.4+.
 `ctx.fillStyle` accepting OKLCH requires the same versions (canvas resolves
 via the same CSS color parsing pipeline).
-
----
-
-## Planned / Discussed Improvements
-
-These were discussed but not yet implemented:
-
-1. **URL hash state** — encode all slider values into `location.hash` on change.
-   Enables bookmarking and sharing a specific palette configuration.
-
-2. **Export button** — copy current palette as:
-   - CSS custom properties: `--color-red: #C47A72;`
-   - Zed JSON snippet for `kizuna-ai.json`
-
-3. **Per-mode L/C in presets** — separate dark/light values so the same preset
-   looks correct in both modes.
-
-4. **Preset save slots** — `localStorage`-backed named slots for user-defined
-   configurations (device-local only).
-
----
-
-## Zed Theme Integration
-
-The end goal is populating `kizuna-ai.json`. Typical Zed theme palette keys:
-
-```json
-{
-  "players": [{ "cursor": "#FF...", ... }],
-  "editor.background": "#...",
-  "terminal.ansi.red": "#...",
-  "terminal.ansi.bright_red": "#...",
-  ...
-}
-```
-
-Map: Dim row → no direct ANSI equivalent (can be used for UI chrome),
-Normal row → `terminal.ansi.*`, Bright row → `terminal.ansi.bright_*`.
-
----
-
-## Code Style Notes
-
-- Tabs (size 2), no spaces
-- No superfluous comments
-- Descriptive variable names, no single-letter variables outside loops
-- Exception-based error philosophy (no defensive null checks in happy path)
-- Keep it a single file — no build tooling, no external dependencies
