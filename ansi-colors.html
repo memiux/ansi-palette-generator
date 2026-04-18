@@ -86,7 +86,7 @@
 		<button id="btn-export" title="Export current state as JSON">↓ Export</button>
 		<label id="btn-import-label" title="Import a preset JSON file">↑ Import<input type="file" id="import-file" accept=".json" style="display:none"></label>
 		<span class="toolbar-sep"></span>
-		<button id="btn-reset">Reset</button>
+		<button id="btn-reset">🗘 Reset</button>
 		<button id="btn-toggle">☀ Light</button>
 		<span id="import-error"></span>
 	</div>
@@ -175,7 +175,17 @@
 			</div>
 			<hr class="divider">
 			<div class="slider-row">
-				<label>N.Sat</label>
+				<label>Black L</label>
+				<input type="range" id="nblack-slider" min="0.10" max="0.80" step="0.01" value="0.42">
+				<output id="nblack-output">0.42</output>
+			</div>
+			<div class="slider-row">
+				<label>White L</label>
+				<input type="range" id="nwhite-slider" min="0.50" max="1.50" step="0.01" value="1.05">
+				<output id="nwhite-output">1.05</output>
+			</div>
+			<div class="slider-row">
+				<label>Neutral S</label>
 				<input type="range" id="nsat-slider" min="0" max="1" step="0.01" value="1">
 				<output id="nsat-output">1.00</output>
 			</div>
@@ -245,6 +255,8 @@
 			hues:   { Black: 60, Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328, White: 260 },
 			temp:   0,
 			neutralSat: 1,
+			neutralBlack: 0.42,
+			neutralWhite: 1.05,
 			params: {
 				dark:  { Dim: { l: 0.55, c: 0.07 }, Normal: { l: 0.72, c: 0.10 }, Bright: { l: 0.82, c: 0.13 } },
 				light: { Dim: { l: 0.42, c: 0.07 }, Normal: { l: 0.52, c: 0.10 }, Bright: { l: 0.60, c: 0.13 } },
@@ -254,7 +266,7 @@
 		const PRESETS = {
 			default: {
 				hues:   { Black: 60, Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328, White: 260 },
-				temp: 0, neutralSat: 1,
+				temp: 0, neutralSat: 1, neutralBlack: 0.42, neutralWhite: 1.05,
 				params: {
 					dark:  { Dim: { l: 0.55, c: 0.07 }, Normal: { l: 0.72, c: 0.10 }, Bright: { l: 0.82, c: 0.13 } },
 					light: { Dim: { l: 0.42, c: 0.07 }, Normal: { l: 0.52, c: 0.10 }, Bright: { l: 0.60, c: 0.13 } },
@@ -262,7 +274,7 @@
 			},
 			warm: {
 				hues:   { Black: 55, Red: 22, Yellow: 95, Green: 140, Cyan: 188, Blue: 258, Magenta: 320, White: 88 },
-				temp: -8, neutralSat: 1,
+				temp: -8, neutralSat: 1, neutralBlack: 0.42, neutralWhite: 1.05,
 				params: {
 					dark:  { Dim: { l: 0.53, c: 0.08 }, Normal: { l: 0.70, c: 0.11 }, Bright: { l: 0.80, c: 0.14 } },
 					light: { Dim: { l: 0.40, c: 0.08 }, Normal: { l: 0.50, c: 0.11 }, Bright: { l: 0.58, c: 0.14 } },
@@ -270,7 +282,7 @@
 			},
 			cool: {
 				hues:   { Black: 215, Red: 35, Yellow: 115, Green: 148, Cyan: 200, Blue: 270, Magenta: 335, White: 245 },
-				temp: 8, neutralSat: 1,
+				temp: 8, neutralSat: 1, neutralBlack: 0.42, neutralWhite: 1.05,
 				params: {
 					dark:  { Dim: { l: 0.56, c: 0.07 }, Normal: { l: 0.73, c: 0.10 }, Bright: { l: 0.83, c: 0.12 } },
 					light: { Dim: { l: 0.43, c: 0.07 }, Normal: { l: 0.53, c: 0.10 }, Bright: { l: 0.61, c: 0.12 } },
@@ -278,7 +290,7 @@
 			},
 			nord: {
 				hues:   { Black: 210, Red: 15, Yellow: 92, Green: 143, Cyan: 196, Blue: 248, Magenta: 316, White: 228 },
-				temp: 3, neutralSat: 1,
+				temp: 3, neutralSat: 1, neutralBlack: 0.42, neutralWhite: 1.05,
 				params: {
 					dark:  { Dim: { l: 0.50, c: 0.06 }, Normal: { l: 0.68, c: 0.08 }, Bright: { l: 0.78, c: 0.10 } },
 					light: { Dim: { l: 0.38, c: 0.06 }, Normal: { l: 0.48, c: 0.08 }, Bright: { l: 0.56, c: 0.10 } },
@@ -286,7 +298,7 @@
 			},
 			muted: {
 				hues:   { Black: 65, Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328, White: 250 },
-				temp: 0, neutralSat: 1,
+				temp: 0, neutralSat: 1, neutralBlack: 0.42, neutralWhite: 1.05,
 				params: {
 					dark:  { Dim: { l: 0.55, c: 0.04 }, Normal: { l: 0.72, c: 0.06 }, Bright: { l: 0.82, c: 0.08 } },
 					light: { Dim: { l: 0.42, c: 0.04 }, Normal: { l: 0.52, c: 0.06 }, Bright: { l: 0.60, c: 0.08 } },
@@ -294,7 +306,7 @@
 			},
 			vivid: {
 				hues:   { Black: 40, Red: 29, Yellow: 109, Green: 142, Cyan: 194, Blue: 264, Magenta: 328, White: 285 },
-				temp: 0, neutralSat: 1,
+				temp: 0, neutralSat: 1, neutralBlack: 0.42, neutralWhite: 1.05,
 				params: {
 					dark:  { Dim: { l: 0.52, c: 0.12 }, Normal: { l: 0.70, c: 0.16 }, Bright: { l: 0.80, c: 0.20 } },
 					light: { Dim: { l: 0.40, c: 0.12 }, Normal: { l: 0.50, c: 0.16 }, Bright: { l: 0.58, c: 0.20 } },
@@ -302,7 +314,7 @@
 			},
 			kizuna: {
 				hues:   { Black: 322, Red: 18, Yellow: 98, Green: 140, Cyan: 198, Blue: 266, Magenta: 322, White: 282 },
-				temp: -4, neutralSat: 0.85,
+				temp: -4, neutralSat: 0.85, neutralBlack: 0.42, neutralWhite: 1.05,
 				params: {
 					dark:  { Dim: { l: 0.54, c: 0.11 }, Normal: { l: 0.71, c: 0.14 }, Bright: { l: 0.82, c: 0.17 } },
 					light: { Dim: { l: 0.41, c: 0.11 }, Normal: { l: 0.51, c: 0.14 }, Bright: { l: 0.59, c: 0.17 } },
@@ -453,6 +465,18 @@
 				markOutput(output, String(value), String(DEFAULTS.hues[color]));
 			});
 
+			const nblackSlider = document.getElementById('nblack-slider');
+			const nblackOutput = document.getElementById('nblack-output');
+			nblackSlider.value = preset.neutralBlack;
+			nblackOutput.value = preset.neutralBlack.toFixed(2);
+			markOutput(nblackOutput, preset.neutralBlack.toFixed(2), DEFAULTS.neutralBlack.toFixed(2));
+
+			const nwhiteSlider = document.getElementById('nwhite-slider');
+			const nwhiteOutput = document.getElementById('nwhite-output');
+			nwhiteSlider.value = preset.neutralWhite;
+			nwhiteOutput.value = preset.neutralWhite.toFixed(2);
+			markOutput(nwhiteOutput, preset.neutralWhite.toFixed(2), DEFAULTS.neutralWhite.toFixed(2));
+
 			const nsatSlider = document.getElementById('nsat-slider');
 			const nsatOutput = document.getElementById('nsat-output');
 			nsatSlider.value = preset.neutralSat;
@@ -487,9 +511,29 @@
 			});
 			temperature = preset.temp;
 			neutralSat  = preset.neutralSat;
+			neutralFactor.Black = preset.neutralBlack;
+			neutralFactor.White = preset.neutralWhite;
 			syncSlidersToState(preset);
 			applySwatches();
 		}
+
+		document.getElementById('nblack-slider').addEventListener('input', function() {
+			neutralFactor.Black = parseFloat(this.value);
+			const output = document.getElementById('nblack-output');
+			output.value = neutralFactor.Black.toFixed(2);
+			markOutput(output, neutralFactor.Black.toFixed(2), DEFAULTS.neutralBlack.toFixed(2));
+			document.getElementById('preset-select').value = '';
+			applySwatches();
+		});
+
+		document.getElementById('nwhite-slider').addEventListener('input', function() {
+			neutralFactor.White = parseFloat(this.value);
+			const output = document.getElementById('nwhite-output');
+			output.value = neutralFactor.White.toFixed(2);
+			markOutput(output, neutralFactor.White.toFixed(2), DEFAULTS.neutralWhite.toFixed(2));
+			document.getElementById('preset-select').value = '';
+			applySwatches();
+		});
 
 		document.getElementById('nsat-slider').addEventListener('input', function() {
 			neutralSat = parseFloat(this.value);
@@ -543,6 +587,8 @@
 				hues:      { ...hues },
 				temp:      temperature,
 				neutralSat,
+				neutralBlack: neutralFactor.Black,
+				neutralWhite: neutralFactor.White,
 				params: {
 					dark:  { Dim: {...paramsStore.dark.Dim},  Normal: {...paramsStore.dark.Normal},  Bright: {...paramsStore.dark.Bright}  },
 					light: { Dim: {...paramsStore.light.Dim}, Normal: {...paramsStore.light.Normal}, Bright: {...paramsStore.light.Bright} },
@@ -604,6 +650,8 @@
 			if (!obj.hues || hueKeys.some(k => typeof obj.hues[k] !== 'number')) return 'Missing or invalid hues';
 			if (typeof obj.temp !== 'number') return 'Missing temp';
 			if (typeof obj.neutralSat !== 'number') return 'Missing neutralSat';
+			if (typeof obj.neutralBlack !== 'number') obj.neutralBlack = 0.42;
+			if (typeof obj.neutralWhite !== 'number') obj.neutralWhite = 1.05;
 			if (!obj.params) return 'Missing params';
 			for (const mode of ['dark','light']) {
 				if (!obj.params[mode]) return `Missing params.${mode}`;

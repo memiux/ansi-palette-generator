@@ -14,7 +14,7 @@ enough for any terminal emulator or editor theme format.
 
 - Displays 24 swatches: 3 rows (Dim / Normal / Bright) × 8 colors
 - Colors are generated algorithmically from OKLCH parameters, not hardcoded
-- Sliders for per-group L and C, per-color hue angles (including Black and White), neutral saturation (N.Sat), and a global temperature offset
+- Sliders for per-group L and C, per-color hue angles (including Black and White), Black lightness factor (Black L), White lightness factor (White L), neutral saturation (Neutral S), and a global temperature offset
 - Dark/Light mode toggle (each mode has independent L/C params)
 - Preset selector with built-in presets (Default, Warm, Cool, Nord-ish, Muted, Vivid, Kizuna AI) and user-saved custom presets persisted in localStorage
 - Export current state as a named JSON file; import JSON to restore a saved state
@@ -74,12 +74,14 @@ Light mode L values are ~0.13–0.22 lower so colors stay legible against `#f5f5
 ### Neutrals (Black / White)
 
 Black and White have independent hue sliders (full range 0–360°, defaults Black=60°,
-White=260°). Their lightness is derived from the group's L value via fixed factors:
+White=260°). Their lightness is derived from the group's L value via per-neutral factors:
 
 ```js
-neutralFactor = { Black: 0.42, White: 1.05 }
+neutralFactor = { Black: <Black L slider, default 0.42>, White: <White L slider, default 1.05> }
 neutralL = clamp(groupL * factor, 0.05, 0.98)
 ```
+
+`neutralFactor.Black` is user-adjustable via the **Black L** slider (range 0.10–0.80, default 0.42). `neutralFactor.White` is user-adjustable via the **White L** slider (range 0.50–1.50, default 1.05).
 
 Neutral chroma is driven by three inputs combined:
 
@@ -121,7 +123,8 @@ const paramsStore = {
   light: { Dim: {l, c}, Normal: {l, c}, Bright: {l, c} },  // persisted L/C for light mode
 }
 let temperature = 0
-let neutralSat  = 1   // 0–1 multiplier on neutral chroma
+let neutralSat  = 1          // 0–1 multiplier on neutral chroma (Neutral S slider)
+const neutralFactor = { Black: 0.42, White: 1.05 }  // both mutated by Black L / White L sliders
 
 const DEFAULTS = { ... }  // frozen reference for "changed" detection
 const PRESETS  = { ... }  // named built-in configurations
@@ -194,7 +197,7 @@ elements**, not custom tags like `<o>`.
 **Known footgun:** If `<o>` is accidentally used instead of `<output>`,
 `output.value = x` silently sets a JS property without updating the DOM,
 and the CSS rule never matches. This bug has occurred multiple times.
-Always verify with: `grep -c '<output' ansi-colors.html` — expected count is 16.
+Always verify with: `grep -c '<output' ansi-colors.html` — expected count is 18.
 
 ---
 
@@ -204,9 +207,11 @@ Each preset is a full state snapshot:
 
 ```js
 {
-  hues:      { Black, Red, Yellow, Green, Cyan, Blue, Magenta, White },
-  temp:      0,
-  neutralSat: 1,
+  hues:         { Black, Red, Yellow, Green, Cyan, Blue, Magenta, White },
+  temp:         0,
+  neutralSat:   1,
+  neutralBlack: 0.42,
+  neutralWhite: 1.05,
   params: {
     dark:  { Dim: {l, c}, Normal: {l, c}, Bright: {l, c} },
     light: { Dim: {l, c}, Normal: {l, c}, Bright: {l, c} },
