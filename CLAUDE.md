@@ -10,6 +10,12 @@ enough for any terminal emulator or editor theme format.
 
 ---
 
+## Development
+
+Open `ansi-palette-generator.html` directly in a browser — no server, no install, no build. Edit the file, save, refresh.
+
+---
+
 ## What the Tool Does
 
 - Displays 24 swatches: 3 rows (Dim / Normal / Bright) × 8 colors
@@ -134,6 +140,10 @@ const PRESETS  = { ... }  // named built-in configurations
 
 `applySwatches()` is the single render function — all controls call it after
 mutating state. No reactive framework, no virtual DOM.
+
+`buildZedPalette()` formats the current palette as Zed theme keys (`terminal.ansi.*`), distinct from the plain hex `<pre>` output produced by `renderPalette()`.
+
+`captureCurrentState()` snapshots all live state into a preset-shaped object — used by export and "Save Preset".
 
 ---
 
