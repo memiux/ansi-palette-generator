@@ -2,7 +2,7 @@
 <html lang="en" data-mode="dark">
 <head>
 	<meta charset="UTF-8">
-	<title>ANSI Colors — OKLCH Pastels</title>
+	<title>ANSI Palette Generator — OKLCH Pastels</title>
 	<style>
 		:root { --bg: #1a1a1a; --fg: #cccccc; --label: #888; --border: #333; }
 		[data-mode="light"] { --bg: #f5f5f5; --fg: #222222; --label: #666; --border: #ccc; }
@@ -597,7 +597,7 @@
 		}
 
 		function loadCustomPresets() {
-			try { return JSON.parse(localStorage.getItem('ansi-custom-presets') || '{}'); }
+			try { return JSON.parse(localStorage.getItem('custom-presets') || '{}'); }
 			catch { return {}; }
 		}
 
@@ -606,7 +606,7 @@
 			let candidate = name, n = 2;
 			while (all[candidate]) { candidate = `${name} (${n++})`; }
 			all[candidate] = preset;
-			try { localStorage.setItem('ansi-custom-presets', JSON.stringify(all)); }
+			try { localStorage.setItem('custom-presets', JSON.stringify(all)); }
 			catch { showImportError('Storage full'); return null; }
 			return candidate;
 		}
@@ -614,7 +614,7 @@
 		function deleteCustomPreset(name) {
 			const all = loadCustomPresets();
 			delete all[name];
-			localStorage.setItem('ansi-custom-presets', JSON.stringify(all));
+			localStorage.setItem('custom-presets', JSON.stringify(all));
 		}
 
 		function rebuildCustomOptgroup() {

@@ -1,4 +1,4 @@
-# ANSI Color Palette Tool — Claude Code Project
+# ANSI Palette Generator — Claude Code Project
 
 ## Overview
 
@@ -6,7 +6,7 @@ A self-contained, single-file HTML tool for designing 16-color ANSI terminal pal
 The primary use case is generating color values for a **Zed editor theme**, but the output is generic 
 enough for any terminal emulator or editor theme format.
 
-**File:** `ansi-colors.html` — zero dependencies, no build step.
+**File:** `ansi-palette-generator.html` — zero dependencies, no build step.
 
 ---
 
@@ -197,7 +197,7 @@ elements**, not custom tags like `<o>`.
 **Known footgun:** If `<o>` is accidentally used instead of `<output>`,
 `output.value = x` silently sets a JS property without updating the DOM,
 and the CSS rule never matches. This bug has occurred multiple times.
-Always verify with: `grep -c '<output' ansi-colors.html` — expected count is 18.
+Always verify with: `grep -c '<output' ansi-palette-generator.html` — expected count is 18.
 
 ---
 
@@ -231,7 +231,7 @@ modes each remember their own independently tuned L/C values.
 
 Manual slider interaction clears the preset select (`value = ''`).
 
-**Custom preset persistence** uses localStorage key `"ansi-custom-presets"` — a flat
+**Custom preset persistence** uses localStorage key `"custom-presets"` — a flat
 JSON object keyed by preset name. Custom preset option values are prefixed with
 `"custom:"` (e.g. `"custom:My Preset"`) to distinguish them from built-in keys in
 the `<select>`. `getActivePreset()` handles both namespaces.
