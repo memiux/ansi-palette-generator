@@ -22,7 +22,7 @@ Open `ansi-palette-generator.html` directly in a browser — no server, no insta
 - Colors are generated algorithmically from OKLCH parameters, not hardcoded
 - Sliders for per-group L and C, per-color hue angles (including Black and White), Black lightness factor (Black L), White lightness factor (White L), neutral saturation (Neutral S), and a global temperature offset
 - Dark/Light mode toggle (each mode has independent L/C params)
-- Preset selector with built-in presets (Default, Warm, Cool, Nord-ish, Muted, Vivid, Kizuna AI) and user-saved custom presets persisted in localStorage
+- Preset selector with built-in presets (Default, Warm, Cool, Nord-ish, Muted, Vivid, Kizuna AI, Pinkzuna) and user-saved custom presets persisted in localStorage
 - Export current state as a named JSON file; import JSON to restore a saved state
 - WCAG contrast badge on each swatch (ratio + AAA/AA/A/fail dot)
 - `<pre>` palette showing all hex values, grouped and sorted in rainbow order
