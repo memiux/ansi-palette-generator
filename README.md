@@ -6,7 +6,7 @@ A self-contained, single-file HTML tool for designing 16-color ANSI terminal pal
 
 ## Usage
 
-Open `ansi-palette-generator.html` directly in a browser — no server, no install, no build.
+Open `index.html` directly in a browser — no server, no install, no build.
 
 ## Features
 
